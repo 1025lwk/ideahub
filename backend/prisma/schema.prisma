@@ -1,0 +1,138 @@
+// IdeaHub Prisma Schema
+// 本地开发使用 SQLite，生产环境切换 datasource provider 为 postgresql
+// 注意：SQLite 不支持 enum，此处使用 String + 应用层校验；PostgreSQL 可改为 enum
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户表 ====================
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      String   @default("USER") // USER | ADMIN
+  balance   Float    @default(0) // 平台钱包余额
+  avatar    String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ideas         Idea[]
+  ordersBuyer   Order[]            @relation("BuyerOrders")
+  ordersSeller  Order[]            @relation("SellerOrders")
+  transactions  WalletTransaction[]
+  aiRequests    AIRequest[]
+
+  @@index([email])
+  @@index([username])
+}
+
+// ==================== 分类表（支持二级分类） ====================
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Category[] @relation("CategoryTree")
+  sort      Int        @default(0)
+  createdAt DateTime   @default(now())
+
+  ideas Idea[]
+
+  @@index([parentId])
+}
+
+// ==================== 创意点子表 ====================
+model Idea {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  previewContent String // 预览内容（公开可见）
+  fullContent    String // 完整内容（购买后解锁）
+  price          Float    @default(0)
+  status         String   @default("PENDING") // PENDING | PUBLISHED | REJECTED
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id])
+  sellerId       String
+  seller         User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  purchaseCount  Int      @default(0)
+  tags           String   @default("[]") // JSON数组
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  orders     Order[]
+  aiRequests AIRequest[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([status])
+}
+
+// ==================== 订单表 ====================
+model Order {
+  id            String   @id @default(cuid())
+  type          String // IDEA_PURCHASE | AI_GENERATION
+  buyerId       String
+  buyer         User     @relation("BuyerOrders", fields: [buyerId], references: [id])
+  sellerId      String?
+  seller        User?    @relation("SellerOrders", fields: [sellerId], references: [id])
+  ideaId        String?
+  idea          Idea?    @relation(fields: [ideaId], references: [id])
+  totalAmount   Float    @default(0)
+  platformFee   Float    @default(0)
+  sellerEarning Float?   // 卖家所得（点子交易时有值）
+  status        String   @default("COMPLETED") // PENDING | COMPLETED | FAILED | REFUNDED
+  createdAt     DateTime @default(now())
+
+  transactions WalletTransaction[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([ideaId])
+}
+
+// ==================== 钱包流水表 ====================
+model WalletTransaction {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String // RECHARGE | PURCHASE | EARNING | REFUND
+  amount       Float    @default(0) // 正数为收入，负数为支出
+  balanceAfter Float    @default(0) // 交易后余额
+  description  String
+  orderId      String?
+  order        Order?   @relation(fields: [orderId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderId])
+}
+
+// ==================== AI生成任务表 ====================
+model AIRequest {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideaId            String
+  idea              Idea     @relation(fields: [ideaId], references: [id])
+  extraRequirements String?
+  techStack         String?  // 技术偏好：react, vue, python, etc.
+  combinedPrompt    String?  // 组合后的完整Prompt
+  status            String   @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED
+  downloadUrl       String?  // 生成代码包的下载链接
+  errorMessage      String?
+  orderId           String?  // 关联的AI生成订单
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([ideaId])
+  @@index([status])
+}

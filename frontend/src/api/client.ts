@@ -2,8 +2,10 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { message } from 'antd';
 
 // 创建 axios 实例
+// 开发环境使用 Vite proxy (/api → localhost:4000)
+// 生产环境通过 VITE_API_URL 环境变量指定后端地址
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 15000,
 });
 

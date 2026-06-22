@@ -25,7 +25,7 @@ router.get('/my/ideas', authRequired, async (req, res, next) => {
 // 获取创意列表（市场页）
 router.get('/', async (req, res, next) => {
   try {
-    const result = await ideaService.list(req.query);
+    const result = await ideaService.list(req.query as any);
     success(res, result);
   } catch (err) { next(err); }
 });

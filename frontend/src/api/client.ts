@@ -2,10 +2,15 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { message } from 'antd';
 
 // 创建 axios 实例
+<<<<<<< HEAD
 // 开发环境使用 Vite proxy (/api → localhost:4000)
 // 生产环境通过 VITE_API_URL 环境变量指定后端地址
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
+=======
+const api = axios.create({
+  baseURL: '/api',
+>>>>>>> c0c2a9b1946170f11780aac76194b9e9ba09a9b5
   timeout: 15000,
 });
 

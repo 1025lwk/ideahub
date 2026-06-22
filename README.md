@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # IdeaHub - 创意交易平台
 
 > 买卖创意点子，通过 AI 一键生成可运行的代码项目，平台从中抽成盈利。
@@ -170,6 +169,3 @@ npm run dev               # 启动开发服务器 (http://localhost:5173)
 ## License
 
 MIT
-=======
-# IdeaHub
->>>>>>> c0c2a9b1946170f11780aac76194b9e9ba09a9b5

@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "postinstall": "prisma generate && prisma db push",
+    "postinstall": "prisma generate",
     "worker": "tsx src/workers/index.ts",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",

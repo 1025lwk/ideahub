@@ -12,8 +12,11 @@ import orderRoutes from './routes/orderRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import { errorHandler } from './middleware/error.js';
 
-// 导入Worker（启动队列处理）
-import './workers/index.js';
+// 仅在非 Vercel 环境启动 Worker
+if (!process.env.VERCEL) {
+  // 导入 Worker（启动队列处理）
+  import('./workers/index.js').catch(() => {});
+}
 
 dotenv.config();
 
@@ -43,13 +46,16 @@ app.get('/api/health', (_req, res) => {
 // 全局错误处理
 app.use(errorHandler);
 
-const PORT = parseInt(process.env.PORT || '4000');
+// 仅在非 Vercel 环境启动 HTTP 服务
+if (!process.env.VERCEL) {
+  const PORT = parseInt(process.env.PORT || '4000');
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 IdeaHub API 服务已启动`);
-  console.log(`📍 地址: http://localhost:${PORT}`);
-  console.log(`📊 健康检查: http://localhost:${PORT}/api/health`);
-  console.log(`🤖 AI Worker: 已内嵌启动（Mock模式）\n`);
-});
+  app.listen(PORT, () => {
+    console.log(`\n🚀 IdeaHub API 服务已启动`);
+    console.log(`📍 地址: http://localhost:${PORT}`);
+    console.log(`📊 健康检查: http://localhost:${PORT}/api/health`);
+    console.log(`🤖 AI Worker: 已内嵌启动（Mock模式）\n`);
+  });
+}
 
 export default app;
